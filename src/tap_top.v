@@ -13,10 +13,16 @@
 // synopsys translate_on
 
 // Define IDCODE Value
-`define IDCODE_VALUE  32'h149511c3
+`define IDCODE_VALUE  32'h10102001
 // 0001             version
-// 0100100101010001 part number (IQ)
-// 00011100001      manufacturer id (flextronics)
+// 0000000000000001 part number (IQ)
+//                  0001 PULPissimo
+//                  0002 PULP
+//                  0003 bigPULP
+//                  0102 Vincent Vega(derived from PULP)
+// 00000000001      manufacturer id
+//                  1 ETH
+//                  2 Greenwaves
 // 1                required by standard
 
 // Length of the Instruction register
@@ -47,23 +53,17 @@ module tap_top(
 	       capture_dr_o,
 
 	       // Select signals for boundary scan or mbist
-	       axireg_sel_o,
-	       bbmuxreg_sel_o,
-	       clkgatereg_sel_o,
+	       memory_sel_o,
+	       fifo_sel_o,
 	       confreg_sel_o,
-	       testmodereg_sel_o,
-	       bistreg_sel_o,
 
 	       // TDO signal that is connected to TDI of sub-modules.
 	       scan_in_o,
 
 	       // TDI signals from sub-modules
-	       axireg_out_i,     // from reg1 module
-	       bbmuxreg_out_i,   // from reg2 module
-	       clkgatereg_out_i, // from reg3 module
-	       confreg_out_i,    // from reg4 module
-	       testmodereg_out_i,// from reg5 module
-	       bistreg_out_i     // from reg6 module
+	       memory_out_i,     // from reg1 module
+	       fifo_out_i,       // from reg2 module
+	       confreg_out_i     // from reg3 module
 	       );
 
 
@@ -81,23 +81,17 @@ output  update_dr_o;
 output  capture_dr_o;
 
 // Select signals for boundary scan or mbist
-output  axireg_sel_o;
-output  bbmuxreg_sel_o;
-output  clkgatereg_sel_o;
+output  memory_sel_o;
+output  fifo_sel_o;
 output  confreg_sel_o;
-output  testmodereg_sel_o;
-output  bistreg_sel_o;
 
 // TDO signal that is connected to TDI of sub-modules.
 output  scan_in_o;
 
 // TDI signals from sub-modules
-input   axireg_out_i;      // from reg1 module
-input   bbmuxreg_out_i;    // from reg2 module
-input   clkgatereg_out_i;  // from reg3 module
+input   memory_out_i;      // from reg1 module
+input   fifo_out_i;    // from reg2 module
 input   confreg_out_i;     // from reg4 module
-input   testmodereg_out_i; // from reg5 module
-input   bistreg_out_i;     // from reg6 module
 
 
 // Registers
@@ -118,12 +112,9 @@ reg     pause_ir;
 reg     exit2_ir;
 reg     update_ir;
 reg     idcode_sel;
-reg     axireg_sel;
-reg     bbmuxreg_sel;
-reg     clkgatereg_sel;
+reg     memory_sel;
+reg     fifo_sel;
 reg     confreg_sel;
-reg     testmodereg_sel;
-reg     bistreg_sel;
 reg     bypass_sel;
 reg     tdo_comb;
 reg     td_o;
@@ -136,12 +127,9 @@ assign shift_dr_o = shift_dr;
 assign update_dr_o = update_dr;
 assign capture_dr_o = capture_dr;
 
-assign axireg_sel_o = axireg_sel;
-assign bbmuxreg_sel_o = bbmuxreg_sel;
-assign clkgatereg_sel_o = clkgatereg_sel;
+assign memory_sel_o = memory_sel;
+assign fifo_sel_o = fifo_sel;
 assign confreg_sel_o = confreg_sel;
-assign testmodereg_sel_o = testmodereg_sel;
-assign bistreg_sel_o = bistreg_sel;
 
 
 always @ (posedge tck_i)
@@ -432,15 +420,17 @@ assign  instruction_tdo =  jtag_ir[0];
 reg [31:0] idcode_reg;
 wire       idcode_tdo;
 
-always @ (posedge tck_i)
+always @ (posedge tck_i  or negedge rst_ni)
 begin
-  if(idcode_sel & shift_dr)
+  if (~rst_ni)
+    idcode_reg <=  `IDCODE_VALUE;
+  else if(idcode_sel & shift_dr)
     idcode_reg <=  {td_i, idcode_reg[31:1]};
-  else
+  else if(idcode_sel & (capture_dr | exit1_dr))
     idcode_reg <=  `IDCODE_VALUE;
 end
 
-assign idcode_tdo = idcode_reg;
+assign idcode_tdo = idcode_reg[0];
 
 /**********************************************************************************
 *                                                                                 *
@@ -500,22 +490,16 @@ end
 always @ (latched_jtag_ir)
 begin
   idcode_sel           = 1'b0;
-  axireg_sel           = 1'b0;
-  bbmuxreg_sel         = 1'b0;
-  clkgatereg_sel       = 1'b0;
+  memory_sel           = 1'b0;
+  fifo_sel             = 1'b0;
   confreg_sel          = 1'b0;
-  testmodereg_sel      = 1'b0;
-  bistreg_sel          = 1'b0;
   bypass_sel           = 1'b0;
 
   case(latched_jtag_ir)    /* synthesis parallel_case */
     `IDCODE:            idcode_sel           = 1'b1;    // ID Code
-    `REG1:              axireg_sel           = 1'b1;    // REG1
-    `REG2:              bbmuxreg_sel         = 1'b1;    // REG2
-    `REG3:              clkgatereg_sel       = 1'b1;    // REG3
-    `REG4:              confreg_sel          = 1'b1;    // REG4
-    `REG5:              testmodereg_sel      = 1'b1;    // REG5
-    `REG6:              bistreg_sel          = 1'b1;    // REG6
+    `REG1:              memory_sel           = 1'b1;    // REG1
+    `REG2:              fifo_sel             = 1'b1;    // REG2
+    `REG3:              confreg_sel          = 1'b1;    // REG3
     `BYPASS:            bypass_sel           = 1'b1;    // BYPASS
     default:            bypass_sel           = 1'b1;    // BYPASS
   endcase
@@ -529,8 +513,7 @@ end
 *                                                                                 *
 **********************************************************************************/
 always @ (shift_ir_neg or exit1_ir or instruction_tdo or latched_jtag_ir_neg or idcode_tdo or
-          bbmuxreg_out_i or clkgatereg_out_i or confreg_out_i or testmodereg_out_i or
-	  bistreg_out_i or axireg_out_i or bypassed_tdo)
+          fifo_out_i or confreg_out_i or memory_out_i or bypassed_tdo)
 begin
   if(shift_ir_neg)
     tdo_comb = instruction_tdo;
@@ -538,12 +521,9 @@ begin
     begin
       case(latched_jtag_ir_neg)    // synthesis parallel_case
         `IDCODE:            tdo_comb = idcode_tdo;        // Reading ID code
-        `REG1:              tdo_comb = axireg_out_i;      // REG1
-        `REG2:              tdo_comb = bbmuxreg_out_i;    // REG2
-	`REG3:              tdo_comb = clkgatereg_out_i;  // REG3
-        `REG4:              tdo_comb = confreg_out_i;     // REG4
-        `REG5:              tdo_comb = testmodereg_out_i; // REG5
-        `REG6:              tdo_comb = bistreg_out_i;     // REG6
+        `REG1:              tdo_comb = memory_out_i;      // REG1
+        `REG2:              tdo_comb = fifo_out_i;        // REG2
+        `REG3:              tdo_comb = confreg_out_i;     // REG3
         default:            tdo_comb = bypassed_tdo;      // BYPASS instruction
       endcase
     end
