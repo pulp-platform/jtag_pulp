@@ -56,6 +56,9 @@ module tap_top(
 	       memory_sel_o,
 	       fifo_sel_o,
 	       confreg_sel_o,
+               // Bypass fll and qOSC for safty
+	       fll_bypass_o,
+	       qosc_bypass_o,
 
 	       // TDO signal that is connected to TDI of sub-modules.
 	       scan_in_o,
@@ -84,6 +87,8 @@ output  capture_dr_o;
 output  memory_sel_o;
 output  fifo_sel_o;
 output  confreg_sel_o;
+output  fll_bypass_o;
+output  qosc_bypass_o;
 
 // TDO signal that is connected to TDI of sub-modules.
 output  scan_in_o;
@@ -116,6 +121,8 @@ reg     memory_sel;
 reg     fifo_sel;
 reg     confreg_sel;
 reg     bypass_sel;
+reg     fll_bypass_reg;
+reg     qosc_bypass_reg;
 reg     tdo_comb;
 reg     td_o;
 //reg     tdo_padoe_o;
@@ -130,6 +137,8 @@ assign capture_dr_o = capture_dr;
 assign memory_sel_o = memory_sel;
 assign fifo_sel_o = fifo_sel;
 assign confreg_sel_o = confreg_sel;
+assign fll_bypass_o = fll_bypass_reg;
+assign qosc_bypass_o = qosc_bypass_reg;
 
 
 always @ (posedge tck_i)
@@ -500,6 +509,8 @@ begin
     `REG1:              memory_sel           = 1'b1;    // REG1
     `REG2:              fifo_sel             = 1'b1;    // REG2
     `REG3:              confreg_sel          = 1'b1;    // REG3
+    `REG4:              bypass_sel           = 1'b0;    // REG4
+    `REG5:              bypass_sel           = 1'b0;    // REG5
     `BYPASS:            bypass_sel           = 1'b1;    // BYPASS
     default:            bypass_sel           = 1'b1;    // BYPASS
   endcase
@@ -524,6 +535,8 @@ begin
         `REG1:              tdo_comb = memory_out_i;      // REG1
         `REG2:              tdo_comb = fifo_out_i;        // REG2
         `REG3:              tdo_comb = confreg_out_i;     // REG3
+        `REG4:              tdo_comb = fll_bypass_reg;     // REG4
+        `REG5:              tdo_comb = qosc_bypass_reg;     // REG5
         default:            tdo_comb = bypassed_tdo;      // BYPASS instruction
       endcase
     end
@@ -549,5 +562,20 @@ begin
   latched_jtag_ir_neg <=  latched_jtag_ir;
 end
 
+   always @ (posedge tck_i or negedge rst_ni)
+     begin
+        if(~rst_ni)
+          begin
+             fll_bypass_reg <=  1'b0;
+             qosc_bypass_reg <= 1'b0;
+          end
+        else begin
+           if(update_ir &  (jtag_ir == `REG4))
+             fll_bypass_reg  <=  ~fll_bypass_reg;
+
+           if(update_ir &  (jtag_ir == `REG5))
+             qosc_bypass_reg  <=  ~qosc_bypass_reg;
+        end
+     end
 
 endmodule
