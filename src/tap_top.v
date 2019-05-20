@@ -524,7 +524,7 @@ end
 *                                                                                 *
 **********************************************************************************/
 always @ (shift_ir_neg or exit1_ir or instruction_tdo or latched_jtag_ir_neg or idcode_tdo or
-          fifo_out_i or confreg_out_i or memory_out_i or bypassed_tdo)
+          fifo_out_i or confreg_out_i or memory_out_i or fll_bypass_reg or qosc_bypass_reg or bypassed_tdo)
 begin
   if(shift_ir_neg)
     tdo_comb = instruction_tdo;
