@@ -33,8 +33,8 @@
 `define REG1            4'b0100
 `define REG2            4'b0101
 `define REG3            4'b0110
-`define REG4            4'b0111
-`define REG5            4'b1000
+`define REG_CLK_BYP     4'b0111
+`define REG_OBSERV      4'b1000
 `define REG6            4'b1001
 `define BYPASS          4'b1111
 
@@ -56,9 +56,8 @@ module tap_top(
 	       memory_sel_o,
 	       fifo_sel_o,
 	       confreg_sel_o,
-               // Bypass fll and qOSC for safty
-	       fll_bypass_o,
-	       qosc_bypass_o,
+         clk_byp_sel_o,
+         observ_sel_o,
 
 	       // TDO signal that is connected to TDI of sub-modules.
 	       scan_in_o,
@@ -66,7 +65,9 @@ module tap_top(
 	       // TDI signals from sub-modules
 	       memory_out_i,     // from reg1 module
 	       fifo_out_i,       // from reg2 module
-	       confreg_out_i     // from reg3 module
+	       confreg_out_i,     // from reg3 module
+         clk_byp_out_i,
+         observ_out_i         
 	       );
 
 
@@ -87,8 +88,8 @@ output  capture_dr_o;
 output  memory_sel_o;
 output  fifo_sel_o;
 output  confreg_sel_o;
-output  fll_bypass_o;
-output  qosc_bypass_o;
+output  clk_byp_sel_o;
+output  observ_sel_o;
 
 // TDO signal that is connected to TDI of sub-modules.
 output  scan_in_o;
@@ -97,6 +98,8 @@ output  scan_in_o;
 input   memory_out_i;      // from reg1 module
 input   fifo_out_i;    // from reg2 module
 input   confreg_out_i;     // from reg4 module
+input   clk_byp_out_i;
+input   observ_out_i;
 
 
 // Registers
@@ -121,8 +124,10 @@ reg     memory_sel;
 reg     fifo_sel;
 reg     confreg_sel;
 reg     bypass_sel;
-reg     fll_bypass_reg;
-reg     qosc_bypass_reg;
+
+reg     clk_byp_sel;
+reg     observ_sel;
+
 reg     tdo_comb;
 reg     td_o;
 //reg     tdo_padoe_o;
@@ -137,8 +142,9 @@ assign capture_dr_o = capture_dr;
 assign memory_sel_o = memory_sel;
 assign fifo_sel_o = fifo_sel;
 assign confreg_sel_o = confreg_sel;
-assign fll_bypass_o = fll_bypass_reg;
-assign qosc_bypass_o = qosc_bypass_reg;
+
+assign clk_byp_sel_o  = clk_byp_sel;
+assign observ_sel_o   = observ_sel;
 
 
 always @ (posedge tck_i)
@@ -503,14 +509,16 @@ begin
   fifo_sel             = 1'b0;
   confreg_sel          = 1'b0;
   bypass_sel           = 1'b0;
+  clk_byp_sel          = 1'b0;
+  observ_sel           = 1'b0;
 
   case(latched_jtag_ir)    /* synthesis parallel_case */
     `IDCODE:            idcode_sel           = 1'b1;    // ID Code
     `REG1:              memory_sel           = 1'b1;    // REG1
     `REG2:              fifo_sel             = 1'b1;    // REG2
     `REG3:              confreg_sel          = 1'b1;    // REG3
-    `REG4:              bypass_sel           = 1'b0;    // REG4
-    `REG5:              bypass_sel           = 1'b0;    // REG5
+    `REG_CLK_BYP:       clk_byp_sel          = 1'b1;    // REG4
+    `REG_OBSERV:        observ_sel           = 1'b1;    // REG5
     `BYPASS:            bypass_sel           = 1'b1;    // BYPASS
     default:            bypass_sel           = 1'b1;    // BYPASS
   endcase
@@ -523,8 +531,7 @@ end
 *   Multiplexing TDO data                                                         *
 *                                                                                 *
 **********************************************************************************/
-always @ (shift_ir_neg or exit1_ir or instruction_tdo or latched_jtag_ir_neg or idcode_tdo or
-          fifo_out_i or confreg_out_i or memory_out_i or fll_bypass_reg or qosc_bypass_reg or bypassed_tdo)
+always @ (*)
 begin
   if(shift_ir_neg)
     tdo_comb = instruction_tdo;
@@ -535,8 +542,9 @@ begin
         `REG1:              tdo_comb = memory_out_i;      // REG1
         `REG2:              tdo_comb = fifo_out_i;        // REG2
         `REG3:              tdo_comb = confreg_out_i;     // REG3
-        `REG4:              tdo_comb = fll_bypass_reg;     // REG4
-        `REG5:              tdo_comb = qosc_bypass_reg;     // REG5
+        `REG_CLK_BYP:       tdo_comb = confreg_out_i;     // REG4
+        `REG_OBSERV:        tdo_comb = clk_byp_out_i;     // REG5
+        `BYPASS:            tdo_comb = bypassed_tdo;     // BYPASS
         default:            tdo_comb = bypassed_tdo;      // BYPASS instruction
       endcase
     end
@@ -561,21 +569,5 @@ begin
   shift_ir_neg <=  shift_ir;
   latched_jtag_ir_neg <=  latched_jtag_ir;
 end
-
-   always @ (posedge tck_i or negedge rst_ni)
-     begin
-        if(~rst_ni)
-          begin
-             fll_bypass_reg <=  1'b0;
-             qosc_bypass_reg <= 1'b0;
-          end
-        else begin
-           if(update_ir &  (jtag_ir == `REG4))
-             fll_bypass_reg  <=  ~fll_bypass_reg;
-
-           if(update_ir &  (jtag_ir == `REG5))
-             qosc_bypass_reg  <=  ~qosc_bypass_reg;
-        end
-     end
 
 endmodule
