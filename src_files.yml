@@ -12,4 +12,16 @@ jtag_pulp:
     src/jtag_sync.sv,
     src/tap_top.v,
   ]
-  
+  jg_slint_top_name: [
+    tap_top
+  ]
+  jg_slint_elab_opt: [
+  ]
+  jg_slint_postelab_cmds: [
+  ]
+  jg_slint_clocks: [
+    tck_i,
+  ]
+  jg_slint_resets: [
+    ~rst_ni,
+  ]
