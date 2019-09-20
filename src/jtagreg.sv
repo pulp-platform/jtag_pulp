@@ -48,8 +48,9 @@ module jtagreg
     );
 
     generate
-        for (genvar i=1;i<JTAGREGSIZE-1;i=i+1)
-        begin
+        genvar i;
+        for (i=1;i<JTAGREGSIZE-1;i=i+1)
+        begin : GEN_BSCELL
             bscell reg_bit_mid
               (
                 .clk_i(clk_i),
