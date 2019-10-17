@@ -26,49 +26,49 @@
 // 1                required by standard
 
 // Length of the Instruction register
-`define	IR_LENGTH	4
+`define	IR_LENGTH	5
 
 // Supported Instructions
-`define IDCODE          4'b0010
-`define REG1            4'b0100
-`define REG2            4'b0101
-`define REG3            4'b0110
-`define REG_CLK_BYP     4'b0111
-`define REG_OBSERV      4'b1000
-`define REG6            4'b1001
-`define BYPASS          4'b1111
+`define IDCODE          5'b00010
+`define REG1            5'b00100
+`define REG2            5'b00101
+`define REG3            5'b00110
+`define REG_CLK_BYP     5'b00111
+`define REG_OBSERV      5'b01000
+`define REG6            5'b01001
+`define BYPASS          5'b11111
 
 // Top module
-module tap_top(
-	       // JTAG pads
-	       tms_i,
-	       tck_i,
-	       rst_ni,
-	       td_i,
-	       td_o,
+module tap_top (
+  // JTAG pads
+  tms_i,
+  tck_i,
+  rst_ni,
+  td_i,
+  td_o,
 
-	       // TAP states
-	       shift_dr_o,
-	       update_dr_o,
-	       capture_dr_o,
+  // TAP states
+  shift_dr_o,
+  update_dr_o,
+  capture_dr_o,
 
-	       // Select signals for boundary scan or mbist
-	       memory_sel_o,
-	       fifo_sel_o,
-	       confreg_sel_o,
-         clk_byp_sel_o,
-         observ_sel_o,
+  // Select signals for boundary scan or mbist
+  memory_sel_o,
+  fifo_sel_o,
+  confreg_sel_o,
+  clk_byp_sel_o,
+  observ_sel_o,
 
-	       // TDO signal that is connected to TDI of sub-modules.
-	       scan_in_o,
+  // TDO signal that is connected to TDI of sub-modules.
+  scan_in_o,
 
-	       // TDI signals from sub-modules
-	       memory_out_i,     // from reg1 module
-	       fifo_out_i,       // from reg2 module
-	       confreg_out_i,     // from reg3 module
-         clk_byp_out_i,
-         observ_out_i         
-	       );
+  // TDI signals from sub-modules
+  memory_out_i,     // from reg1 module
+  fifo_out_i,       // from reg2 module
+  confreg_out_i,     // from reg3 module
+  clk_byp_out_i,
+  observ_out_i
+);
 
 
 // JTAG pins
@@ -413,7 +413,7 @@ begin
   if(~rst_ni)
     jtag_ir[`IR_LENGTH-1:0] <=  `IR_LENGTH'b0;
   else if(capture_ir)
-    jtag_ir <=  4'b0101;          // This value is fixed for easier fault detection
+    jtag_ir <=  5'b00101;          // This value is fixed for easier fault detection
   else if(shift_ir)
     jtag_ir[`IR_LENGTH-1:0] <=  {td_i, jtag_ir[`IR_LENGTH-1:1]};
 end
