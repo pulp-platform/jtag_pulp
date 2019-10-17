@@ -39,36 +39,36 @@
 `define BYPASS          5'b11111
 
 // Top module
-module tap_top(
-	       // JTAG pads
-	       tms_i,
-	       tck_i,
-	       rst_ni,
-	       td_i,
-	       td_o,
+module tap_top (
+  // JTAG pads
+  tms_i,
+  tck_i,
+  rst_ni,
+  td_i,
+  td_o,
 
-	       // TAP states
-	       shift_dr_o,
-	       update_dr_o,
-	       capture_dr_o,
+  // TAP states
+  shift_dr_o,
+  update_dr_o,
+  capture_dr_o,
 
-	       // Select signals for boundary scan or mbist
-	       memory_sel_o,
-	       fifo_sel_o,
-	       confreg_sel_o,
-         clk_byp_sel_o,
-         observ_sel_o,
+  // Select signals for boundary scan or mbist
+  memory_sel_o,
+  fifo_sel_o,
+  confreg_sel_o,
+  clk_byp_sel_o,
+  observ_sel_o,
 
-	       // TDO signal that is connected to TDI of sub-modules.
-	       scan_in_o,
+  // TDO signal that is connected to TDI of sub-modules.
+  scan_in_o,
 
-	       // TDI signals from sub-modules
-	       memory_out_i,     // from reg1 module
-	       fifo_out_i,       // from reg2 module
-	       confreg_out_i,     // from reg3 module
-         clk_byp_out_i,
-         observ_out_i         
-	       );
+  // TDI signals from sub-modules
+  memory_out_i,     // from reg1 module
+  fifo_out_i,       // from reg2 module
+  confreg_out_i,     // from reg3 module
+  clk_byp_out_i,
+  observ_out_i
+);
 
 
 // JTAG pins
