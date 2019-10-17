@@ -9,7 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 `define JTAG_PERIOD  1000
-`define JTAG_IRLEN 4
+`define JTAG_IRLEN 5
 
 task jtag_rst;
   integer halfperiod;
