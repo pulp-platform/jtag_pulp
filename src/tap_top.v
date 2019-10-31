@@ -542,9 +542,9 @@ begin
         `REG1:              tdo_comb = memory_out_i;      // REG1
         `REG2:              tdo_comb = fifo_out_i;        // REG2
         `REG3:              tdo_comb = confreg_out_i;     // REG3
-        `REG_CLK_BYP:       tdo_comb = confreg_out_i;     // REG4
-        `REG_OBSERV:        tdo_comb = clk_byp_out_i;     // REG5
-        `BYPASS:            tdo_comb = bypassed_tdo;     // BYPASS
+        `REG_CLK_BYP:       tdo_comb = clk_byp_out_i;     // REG4
+        `REG_OBSERV:        tdo_comb = observ_out_i;      // REG5
+        `BYPASS:            tdo_comb = bypassed_tdo;      // BYPASS
         default:            tdo_comb = bypassed_tdo;      // BYPASS instruction
       endcase
     end
