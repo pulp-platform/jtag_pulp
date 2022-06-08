@@ -12,19 +12,6 @@
 //`include "timescale.v"
 // synopsys translate_on
 
-// Define IDCODE Value
-`define IDCODE_VALUE  32'h10102001
-// 0001             version
-// 0000000000000001 part number (IQ)
-//                  0001 PULPissimo
-//                  0002 PULP
-//                  0003 bigPULP
-//                  0102 Vincent Vega(derived from PULP)
-// 00000000001      manufacturer id
-//                  1 ETH
-//                  2 Greenwaves
-// 1                required by standard
-
 // Length of the Instruction register
 `define	IR_LENGTH	5
 
@@ -39,7 +26,10 @@
 `define BYPASS          5'b11111
 
 // Top module
-module tap_top (
+module tap_top #(
+    // manufacturer = PULP Platform, part number = 0, version = 1
+    parameter IDCODE_VALUE = 32'h10000db3
+)(
   // JTAG pads
   tms_i,
   tck_i,
@@ -438,11 +428,11 @@ wire       idcode_tdo;
 always @ (posedge tck_i  or negedge rst_ni)
 begin
   if (~rst_ni)
-    idcode_reg <=  `IDCODE_VALUE;
+    idcode_reg <=  IDCODE_VALUE;
   else if(idcode_sel & shift_dr)
     idcode_reg <=  {td_i, idcode_reg[31:1]};
   else if(idcode_sel & (capture_dr | exit1_dr))
-    idcode_reg <=  `IDCODE_VALUE;
+    idcode_reg <=  IDCODE_VALUE;
 end
 
 assign idcode_tdo = idcode_reg[0];
