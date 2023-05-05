@@ -542,10 +542,14 @@ end
 
 
 // Tristate control for td_o pin
-always @ (negedge tck_i)
+always @ (negedge tck_i or negedge rst_ni)
 begin
-  td_o   <=  tdo_comb;
-//  tdo_padoe_o <=  shift_ir | shift_dr ;
+  if(~rst_ni) begin
+    td_o   <=  1'b0;
+  end else begin
+    td_o   <=  tdo_comb;
+  //  tdo_padoe_o <=  shift_ir | shift_dr ;
+  end
 end
 /**********************************************************************************
 *                                                                                 *
