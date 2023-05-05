@@ -1,6 +1,6 @@
 jtag_pulp:
   incdirs: [
-    ../../rtl/includes,
+    ../../hw/includes,
   ]
   files: [
     src/bscell.sv,
